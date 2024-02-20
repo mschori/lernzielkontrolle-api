@@ -4,6 +4,19 @@ from django.db import models
 from .managers import UserManager
 
 
+class EducationOrdinance(models.Model):
+    """
+    Represents an education ordinance.
+    i.e. BiVo 14, BiVo 21 etc.
+    """
+    title = models.CharField(max_length=50, null=False, blank=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     """
     Model User.
@@ -16,6 +29,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+
+    assigned_trainer = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    education_ordinance = models.ForeignKey(EducationOrdinance, on_delete=models.SET_NULL, null=True,
+                                            blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
