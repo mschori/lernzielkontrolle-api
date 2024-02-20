@@ -59,7 +59,7 @@ class LearnAim(models.Model):
         Returns the identification of the learn aim.
         i.e. A1.1 - Create a database
         """
-        return self.action_competence.identification + " - " + self.identification
+        return self.action_competence.identification + "." + self.identification + ": " + self.description
 
 
 class CheckLearnAim(models.Model):

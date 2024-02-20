@@ -35,6 +35,7 @@ class LearnAimSerializer(serializers.ModelSerializer):
     """
 
     tags = TagSerializer(many=True)
+    name = serializers.CharField(source='__str__', read_only=True)
     completed = serializers.SerializerMethodField()
 
     class Meta:
