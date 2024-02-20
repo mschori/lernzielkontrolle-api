@@ -30,7 +30,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
 
-    assigned_trainer = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    assigned_trainer = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,
+                                         related_name='assigned_trainees')
     education_ordinance = models.ForeignKey(EducationOrdinance, on_delete=models.SET_NULL, null=True,
                                             blank=True)
 
