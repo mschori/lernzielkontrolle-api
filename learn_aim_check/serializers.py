@@ -12,7 +12,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = '__all__'
+        exclude = ['created_at', 'updated_at']
 
 
 class CheckLearnAimSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class CheckLearnAimSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CheckLearnAim
-        fields = '__all__'
+        exclude = ['created_at', 'updated_at', 'assigned_trainee', 'closed_learn_check']
 
 
 class LearnAimSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class LearnAimSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearnAim
-        fields = '__all__'
+        exclude = ['created_at', 'updated_at', 'identification', 'action_competence']
 
     def get_completed(self, instance):
         """
@@ -65,7 +65,7 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActionCompetence
-        exclude = ['education_ordinance']
+        exclude = ['education_ordinance', 'created_at', 'updated_at']
 
     def get_learn_aim(self, instance):
         """
