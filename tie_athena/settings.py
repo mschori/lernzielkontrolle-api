@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'users',
-    'drf_auth'
+    'drf_auth',
+    'learn_aim_check'
 ]
 
 # Middleware definition
