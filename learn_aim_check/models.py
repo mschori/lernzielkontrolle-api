@@ -25,9 +25,9 @@ class ActionCompetence(models.Model):
     identification = models.CharField(max_length=5, null=False, blank=False)
     title = models.CharField(max_length=50, null=False, blank=False)
     education_ordinance = models.ManyToManyField(EducationOrdinance)
-    description = models.TextField(max_length=254, null=False, blank=False)
-    associated_modules_vocational_school = models.TextField(max_length=254)
-    associated_modules_overboard_course = models.TextField(max_length=254)
+    description = models.TextField(max_length=500, null=False, blank=False)
+    associated_modules_vocational_school = models.TextField(max_length=254, null=True, blank=True)
+    associated_modules_overboard_course = models.TextField(max_length=254, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
