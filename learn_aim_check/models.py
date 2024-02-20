@@ -4,7 +4,7 @@ from django.db import models
 from users.models import EducationOrdinance, User
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     """
     Represents a tag for a learn aim.
     i.e. Database Design, SQL, Python, etc.
@@ -52,7 +52,7 @@ class LearnAim(models.Model):
     example_text = models.TextField(max_length=254, null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    tags = models.ManyToManyField(Tags)
+    tags = models.ManyToManyField(Tag)
 
     def __str__(self):
         """
@@ -75,3 +75,10 @@ class CheckLearnAim(models.Model):
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='approved_by')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        """
+        Returns the identification of the learn aim.
+        i.e. A1.1 - Create a database
+        """
+        return self.assigned_trainee.email + " - " + self.closed_learn_check.action_competence.identification + "." + self.closed_learn_check.identification + ": " + self.closed_learn_check.description

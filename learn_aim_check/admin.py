@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import ActionCompetence, CheckLearnAim, LearnAim, Tag
+
+admin.site.register(Tag)
+admin.site.register(ActionCompetence)
+admin.site.register(LearnAim)
+admin.site.register(CheckLearnAim)
