@@ -36,13 +36,13 @@ class LearnAimSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True)
     name = serializers.CharField(source='__str__', read_only=True)
-    completed = serializers.SerializerMethodField()
+    checked = serializers.SerializerMethodField()
 
     class Meta:
         model = LearnAim
         exclude = ['created_at', 'updated_at', 'identification', 'action_competence']
 
-    def get_completed(self, instance):
+    def get_checked(self, instance):
         """
         Returns all completed learn aims for the current learn aim.
         A completed learn aim is a learn aim that has been closed by a trainee.
@@ -60,7 +60,7 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
     Returns all fields such as identification, title, education_ordinance, description, associated_modules_vocational_school, associated_modules_overboard_course, created_at, updated_at
     """
 
-    title = serializers.CharField(read_only=True)
+    title = serializers.CharField(source='__str__', read_only=True)
     learn_aim = serializers.SerializerMethodField()
 
     class Meta:
