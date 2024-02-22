@@ -59,7 +59,7 @@ class LearnAim(models.Model):
         Returns the identification of the learn aim.
         i.e. A1.1 - Create a database
         """
-        return self.action_competence.identification + " - " + self.identification
+        return self.action_competence.identification + "." + self.identification + ": " + self.description
 
 
 class CheckLearnAim(models.Model):
@@ -71,6 +71,7 @@ class CheckLearnAim(models.Model):
     closed_learn_check = models.ForeignKey(LearnAim, on_delete=models.CASCADE, null=False, blank=False)
     comment = models.TextField(max_length=254, null=False, blank=False)
     semester = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(8)], null=False, blank=False)
+    close_stage = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], null=False, blank=False)
     is_approved = models.BooleanField(null=False, blank=False, default=False)
     approved_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='approved_by')
     created_at = models.DateTimeField(auto_now_add=True)
