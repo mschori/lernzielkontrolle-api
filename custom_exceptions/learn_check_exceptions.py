@@ -63,12 +63,3 @@ class LearnCheckAlreadyApproved(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "The learn check is already approved. You can not change it."
     default_code = "learn_check_already_approved"
-
-
-class CloseStageUpdateNotAllowed(APIException):
-    """
-    Exception: The close stage can not be updated
-    """
-    status_code = status.HTTP_403_FORBIDDEN
-    default_detail = "The close stage can not be updated."
-    default_code = "close_stage_update_not_allowed"
