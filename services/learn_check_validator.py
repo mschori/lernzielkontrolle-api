@@ -23,9 +23,12 @@ def learn_check_validator(user: User, serializer: CheckLearnAimSerializer, is_cr
     - LearnAimAlreadyChecked: if the learn aim is already checked (only on create)
     """
     previous_checks = CheckLearnAim.objects.filter(
-        assigned_trainee=user, closed_learn_check=serializer.validated_data['closed_learn_check'])
+        assigned_trainee=user,
+        closed_learn_check=serializer.validated_data['closed_learn_check']
+    )
     if len(previous_checks) == 0 and serializer.validated_data['close_stage'] > 1:
         raise LearnAimStageCantStartHigherThenOne
+
     for check in previous_checks:
         if is_create:
             if check.close_stage < serializer.validated_data[('close_s'
@@ -33,5 +36,8 @@ def learn_check_validator(user: User, serializer: CheckLearnAimSerializer, is_cr
                 raise LearnCheckNotApproved
             if check.close_stage == serializer.validated_data['close_stage']:
                 raise LearnAimAlreadyChecked
-        if serializer.validated_data['semester'] < check.semester:
-            raise SemesterCantBeLowerThenPrevious
+            if serializer.validated_data['semester'] < check.semester:
+                raise SemesterCantBeLowerThenPrevious
+        elif not is_create and check.id != serializer.instance.id:
+            if serializer.validated_data['semester'] < check.semester:
+                raise SemesterCantBeLowerThenPrevious
