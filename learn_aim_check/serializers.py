@@ -22,10 +22,20 @@ class CheckLearnAimSerializer(serializers.ModelSerializer):
     """
 
     approved_by = UserSerializer(read_only=True)
+    comment = serializers.CharField(max_length=254, required=True)
+    semester = serializers.IntegerField(min_value=1, max_value=8, required=True)
+    close_stage = serializers.IntegerField(min_value=1, max_value=3, required=True)
+    closed_learn_check_id = serializers.PrimaryKeyRelatedField(queryset=LearnAim.objects.all(),
+                                                               source='closed_learn_check', write_only=True)
 
     class Meta:
         model = CheckLearnAim
-        exclude = ['created_at', 'updated_at', 'assigned_trainee', 'closed_learn_check']
+        fields = '__all__'
+        read_only_fields = ['approved_by']
+        extra_kwargs = {
+            'assigned_trainee': {'required': False},
+            'closed_learn_check': {'required': False}
+        }
 
 
 class LearnAimSerializer(serializers.ModelSerializer):
@@ -49,7 +59,8 @@ class LearnAimSerializer(serializers.ModelSerializer):
         Can be empty because no learn aim has been closed yet.
         """
         completed_learn_aim = CheckLearnAim.objects.filter(closed_learn_check=instance,
-                                                           assigned_trainee=self.context['request'].user)
+                                                           assigned_trainee=self.context['request'].user).order_by(
+            'close_stage')
 
         return CheckLearnAimSerializer(completed_learn_aim, many=True, context=self.context).data
 
