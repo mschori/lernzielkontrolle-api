@@ -69,3 +69,20 @@ class LearnCheckView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk) -> Response:
+        """
+        Delete a learning check.
+        - only the assigned trainee can delete the learn check
+        - only if the learn check is not approved
+        return: Response with the success message
+        """
+        learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
+
+        if learn_aim_check.is_approved:
+            raise LearnCheckAlreadyApproved
+        if learn_aim_check.assigned_trainee != request.user:
+            raise LearnCheckNotYourOwn
+
+        learn_aim_check.delete()
+        return Response({"Success": "Learn check successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
