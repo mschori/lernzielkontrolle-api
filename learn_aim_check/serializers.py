@@ -84,3 +84,33 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
         """
         learn_aims = LearnAim.objects.filter(action_competence=instance)
         return LearnAimSerializer(learn_aims, many=True, context=self.context).data
+
+
+class DiagramSerializer(serializers.Serializer):
+    """
+    Serializes the Diagram model.
+    Returns all fields such as id, name, closed, total
+    """
+    id = serializers.IntegerField(source='pk')
+    name = serializers.CharField(source='__str__')
+    closed = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActionCompetence
+        exclude = ['education_ordinance', 'created_at', 'updated_at']
+
+    def get_total(self, instance) -> int:
+        """
+        Returns the total amount of learn aims for the current action competence.
+        """
+        return LearnAim.objects.filter(action_competence=instance).count()
+
+    def get_closed(self, instance) -> int:
+        """
+        Returns the total amount of closed learn aims for the current action competence.
+        This is the total amount of learn aims that have been closed by a trainee with the close_stage 3 and is_approved True.
+        """
+        return CheckLearnAim.objects.filter(closed_learn_check__action_competence=instance,
+                                            assigned_trainee=self.context['request'].user, close_stage=3,
+                                            is_approved=True).count()

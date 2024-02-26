@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, \
     LearnCheckAlreadyApproved, LearnCheckNotYourOwn
 from learn_aim_check.models import ActionCompetence, CheckLearnAim
-from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer
+from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
 
@@ -86,3 +86,13 @@ class LearnCheckView(APIView):
 
         learn_aim_check.delete()
         return Response({"Success": "Learn check successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class LearnCheckChart(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request, pk) -> Response:
+        action_competence = get_object_or_404(ActionCompetence, id=pk)
+        serializer = DiagramSerializer(action_competence, context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
