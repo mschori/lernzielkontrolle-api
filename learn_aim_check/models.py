@@ -13,7 +13,10 @@ class Tag(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Returns the tag name as a string.
+        """
         return self.tag_name
 
 
@@ -31,7 +34,7 @@ class ActionCompetence(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns the identification and the title of the action competence.
         i.e. A1 - Create a database
@@ -54,7 +57,7 @@ class LearnAim(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns the identification of the learn aim.
         i.e. A1.1 - Create a database
@@ -77,7 +80,7 @@ class CheckLearnAim(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Returns the identification of the learn aim.
         i.e. A1.1 - Create a database
