@@ -92,7 +92,14 @@ class LearnCheckChart(APIView):
     permission_classes = [IsAuthenticated, IsStudent]
 
     def get(self, request, pk) -> Response:
+        """
+        Get the diagram for the learn check.
+        - only if the learn aim is part of the user's education ordinance
+        return: Response for the chart
+        """
         action_competence = get_object_or_404(ActionCompetence, id=pk)
-        serializer = DiagramSerializer(action_competence, context={'request': request})
+        if request.user.education_ordinance not in action_competence.education_ordinance.all():
+            raise LearnAimNotInEducationOrdinance
 
+        serializer = DiagramSerializer(action_competence, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
