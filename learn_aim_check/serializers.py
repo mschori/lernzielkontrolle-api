@@ -82,7 +82,7 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
         """
         Returns all learn aims for the current action competence as a list.
         """
-        learn_aims = LearnAim.objects.filter(action_competence=instance)
+        learn_aims = LearnAim.objects.filter(action_competence=instance).order_by('identification')
         return LearnAimSerializer(learn_aims, many=True, context=self.context).data
 
 

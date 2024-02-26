@@ -25,7 +25,8 @@ class LearnCheckView(APIView):
         - only to the education ordinance of the user
         return: Response with all action competences and learn aims
         """
-        action_competence = ActionCompetence.objects.filter(education_ordinance=self.request.user.education_ordinance)
+        action_competence = ActionCompetence.objects.filter(
+            education_ordinance=self.request.user.education_ordinance).order_by('identification')
         serializer = ActionCompetenceSerializer(action_competence, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
