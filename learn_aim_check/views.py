@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, \
     LearnCheckAlreadyApproved, LearnCheckNotYourOwn
 from learn_aim_check.models import ActionCompetence, CheckLearnAim
-from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer
+from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
 
@@ -25,7 +25,8 @@ class LearnCheckView(APIView):
         - only to the education ordinance of the user
         return: Response with all action competences and learn aims
         """
-        action_competence = ActionCompetence.objects.filter(education_ordinance=self.request.user.education_ordinance)
+        action_competence = ActionCompetence.objects.filter(
+            education_ordinance=self.request.user.education_ordinance).order_by('identification')
         serializer = ActionCompetenceSerializer(action_competence, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -86,3 +87,20 @@ class LearnCheckView(APIView):
 
         learn_aim_check.delete()
         return Response({"Success": "Learn check successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class LearnCheckChart(APIView):
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def get(self, request, pk) -> Response:
+        """
+        Get the diagram for the learn check.
+        - only if the learn aim is part of the user's education ordinance
+        return: Response for the chart
+        """
+        action_competence = get_object_or_404(ActionCompetence, id=pk)
+        if request.user.education_ordinance not in action_competence.education_ordinance.all():
+            raise LearnAimNotInEducationOrdinance
+
+        serializer = DiagramSerializer(action_competence, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
