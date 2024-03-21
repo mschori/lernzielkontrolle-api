@@ -1,36 +1,47 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, \
-    LearnCheckAlreadyApproved, LearnCheckNotYourOwn
+from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, LearnCheckAlreadyApproved, \
+    LearnCheckNotYourOwn
 from learn_aim_check.models import ActionCompetence, CheckLearnAim
 from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
 
 
-class LearnCheckView(APIView):
+class LearnAim(viewsets.ModelViewSet):
     """
     View for the learn check.
     """
     permission_classes = [IsAuthenticated, IsStudent]
 
-    def get(self, request, *args, **kwargs) -> Response:
+    def get_serializer_class(self):
         """
-        Get all action competences.
+        Get the serializer class for the view.
+        """
+        if self.request.method == 'GET':
+            return ActionCompetenceSerializer
+        return CheckLearnAimSerializer
+
+    def get_queryset(self) -> CheckLearnAim or ActionCompetence:
+        """
+        Get all learn aims.
         - only if the user is a student
         - only to the education ordinance of the user
-        return: Response with all action competences and learn aims
+        return: Response with all learn aims
         """
-        action_competence = ActionCompetence.objects.filter(
-            education_ordinance=self.request.user.education_ordinance).order_by('identification')
-        serializer = ActionCompetenceSerializer(action_competence, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if self.request.method == 'GET':
+            return_value = ActionCompetence.objects.filter(
+                education_ordinance=self.request.user.education_ordinance).order_by('identification')
+        else:
+            return_value = CheckLearnAim.objects.filter(assigned_trainee=self.request.user)
+        return return_value
 
-    def post(self, request, *args, **kwargs) -> Response:
+    def create(self, request, *args, **kwargs) -> Response:
         """
         Create a new learning check.
         - only if the learn aim is part of the user's education ordinance
@@ -50,14 +61,14 @@ class LearnCheckView(APIView):
         serializer.save(assigned_trainee=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def patch(self, request, pk) -> Response:
+    def update(self, request, *args, **kwargs) -> Response:
         """
         Update a learning check.
         - only the assigned trainee can update the learn check
         - only if the learn check is not approved
         return: Response with the updated learn check
         """
-        learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
+        learn_aim_check = get_object_or_404(CheckLearnAim, pk=kwargs['pk'])
 
         if learn_aim_check.is_approved:
             raise LearnCheckAlreadyApproved
@@ -71,20 +82,19 @@ class LearnCheckView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk) -> Response:
+    def destroy(self, request, *args, **kwargs) -> Response:
         """
         Delete a learning check.
         - only the assigned trainee can delete the learn check
         - only if the learn check is not approved
         return: Response with the success message
         """
-        learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
+        learn_aim_check = get_object_or_404(CheckLearnAim, pk=kwargs['pk'])
 
         if learn_aim_check.is_approved:
             raise LearnCheckAlreadyApproved
         if learn_aim_check.assigned_trainee != request.user:
             raise LearnCheckNotYourOwn
-
         learn_aim_check.delete()
         return Response({"Success": "Learn check successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 

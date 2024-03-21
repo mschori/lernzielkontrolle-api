@@ -22,6 +22,7 @@ class CheckLearnAimSerializer(serializers.ModelSerializer):
     """
 
     approved_by = UserSerializer(read_only=True)
+    is_approved = serializers.BooleanField(read_only=True)
     comment = serializers.CharField(max_length=254, required=True)
     semester = serializers.IntegerField(min_value=1, max_value=8, required=True)
     close_stage = serializers.IntegerField(min_value=1, max_value=3, required=True)
@@ -31,7 +32,6 @@ class CheckLearnAimSerializer(serializers.ModelSerializer):
     class Meta:
         model = CheckLearnAim
         fields = '__all__'
-        read_only_fields = ['approved_by']
         extra_kwargs = {
             'assigned_trainee': {'required': False},
             'closed_learn_check': {'required': False}
