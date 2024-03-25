@@ -7,7 +7,7 @@ from users.serializers import UserSerializer
 class TagSerializer(serializers.ModelSerializer):
     """
     Serializes the Tag model.
-    returns all fields such as tag_name, created_at, updated_at
+    Returns all fields such as tag_name, created_at, updated_at
     """
 
     class Meta:
@@ -80,7 +80,8 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
 
     def get_learn_aim(self, instance):
         """
-        Returns all learn aims for the current action competence as a list.
+        instance: ActionCompetence object from the database
+        return: List of all learn aims for the current action competence
         """
         learn_aims = LearnAim.objects.filter(action_competence=instance).order_by('identification')
         return LearnAimSerializer(learn_aims, many=True, context=self.context).data
@@ -102,14 +103,15 @@ class DiagramSerializer(serializers.Serializer):
 
     def get_total(self, instance) -> int:
         """
-        Returns the total amount of learn aims for the current action competence.
+        instance: ActionCompetence object from the database
+        return: Total amount of learn aims for the current action competence
         """
         return LearnAim.objects.filter(action_competence=instance).count()
 
     def get_closed(self, instance) -> int:
         """
-        Returns the total amount of closed learn aims for the current action competence. This is the total amount of
-        learn aims that have been closed by a trainee with the close_stage 3 and is_approved True.
+        instance: ActionCompetence object from the database
+        return: Total amount of approved learn aims for the current action competence
         """
         return CheckLearnAim.objects.filter(closed_learn_check__action_competence=instance,
                                             assigned_trainee=self.context['request'].user, close_stage=3,

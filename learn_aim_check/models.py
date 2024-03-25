@@ -15,7 +15,7 @@ class Tag(models.Model):
 
     def __str__(self) -> str:
         """
-        Returns the tag name as a string.
+        return: the tag name as a string.
         """
         return self.tag_name
 
@@ -37,7 +37,7 @@ class ActionCompetence(models.Model):
     def __str__(self) -> str:
         """
         Returns the identification and the title of the action competence.
-        i.e. A1 - Create a database
+        return: i.e. A1 - Create a database
         """
         return self.identification + " - " + self.title
 
@@ -60,7 +60,7 @@ class LearnAim(models.Model):
     def __str__(self) -> str:
         """
         Returns the identification of the learn aim.
-        i.e. A1.1 - Create a database
+        return: i.e. A1.1 - Create a database
         """
         return self.action_competence.identification + "." + self.identification + ": " + self.description
 
@@ -68,7 +68,6 @@ class LearnAim(models.Model):
 class CheckLearnAim(models.Model):
     """
     Represents a close learn aim.
-
     """
     assigned_trainee = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False)
     closed_learn_check = models.ForeignKey(LearnAim, on_delete=models.CASCADE, null=False, blank=False)
@@ -83,6 +82,6 @@ class CheckLearnAim(models.Model):
     def __str__(self) -> str:
         """
         Returns the identification of the learn aim.
-        i.e. A1.1 - Create a database
+        return: i.e. A1.1 - Create a database
         """
         return self.assigned_trainee.email + " - " + self.closed_learn_check.action_competence.identification + "." + self.closed_learn_check.identification + ": " + self.closed_learn_check.description
