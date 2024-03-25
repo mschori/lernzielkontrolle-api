@@ -14,6 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """
         Handle command.
+        set default groups and users
         """
         try:
             print('Setting default groups and users.')
@@ -53,9 +54,7 @@ class Command(BaseCommand):
             for user in User.objects.filter(email__in=['martin.knecht@student.com', 'larissa.brunner@student.com']):
                 user.groups.add(Group.objects.get(name=get_group_name_student()))
                 user.save()
-
             print('Default entries set successfully.')
-
         except Exception as e:
             print('Error:', e)
             return
