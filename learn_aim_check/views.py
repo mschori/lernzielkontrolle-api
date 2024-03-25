@@ -22,6 +22,7 @@ class LearnAim(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """
         Get the serializer class for the view.
+        return: ActionCompetenceSerializer or CheckLearnAimSerializer
         """
         if self.request.method == 'GET':
             return ActionCompetenceSerializer
@@ -100,6 +101,9 @@ class LearnAim(viewsets.ModelViewSet):
 
 
 class LearnCheckChart(APIView):
+    """
+    View for the diagram of the learn check.
+    """
     permission_classes = [IsAuthenticated, IsStudent]
 
     def get(self, request, pk) -> Response:
