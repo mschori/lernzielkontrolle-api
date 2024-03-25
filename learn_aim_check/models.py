@@ -28,7 +28,7 @@ class ActionCompetence(models.Model):
     identification = models.CharField(max_length=5, null=False, blank=False)
     title = models.CharField(max_length=50, null=False, blank=False)
     education_ordinance = models.ManyToManyField(EducationOrdinance)
-    description = models.TextField(max_length=500, null=False, blank=False)
+    description = models.TextField(null=False, blank=False)
     associated_modules_vocational_school = models.TextField(max_length=254, null=True, blank=True)
     associated_modules_overboard_course = models.TextField(max_length=254, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -49,7 +49,7 @@ class LearnAim(models.Model):
     """
     action_competence = models.ForeignKey(ActionCompetence, on_delete=models.CASCADE)
     identification = models.CharField(max_length=10, null=False, blank=False)
-    description = models.TextField(max_length=254, null=False, blank=False)
+    description = models.TextField(null=False, blank=False)
     taxonomy_level = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(6)], null=False,
                                          blank=False)
     example_text = models.TextField(max_length=254, null=False, blank=False)
@@ -72,7 +72,7 @@ class CheckLearnAim(models.Model):
     """
     assigned_trainee = models.ForeignKey(User, on_delete=models.CASCADE, null=False, blank=False)
     closed_learn_check = models.ForeignKey(LearnAim, on_delete=models.CASCADE, null=False, blank=False)
-    comment = models.TextField(max_length=254, null=False, blank=False)
+    comment = models.TextField(null=False, blank=False)
     semester = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(8)], null=False, blank=False)
     close_stage = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], null=False, blank=False)
     is_approved = models.BooleanField(null=False, blank=False, default=False)
