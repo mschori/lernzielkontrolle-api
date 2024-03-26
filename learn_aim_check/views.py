@@ -12,7 +12,7 @@ from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
 
 
-class LearnAim(viewsets.ModelViewSet):
+class LearnAimViewSet(viewsets.ModelViewSet):
     """
     View for the learn check.
     """
@@ -21,7 +21,8 @@ class LearnAim(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """
         Get the serializer class for the view.
-        return: ActionCompetenceSerializer or CheckLearnAimSerializer
+        :param self: View object
+        :return: ActionCompetenceSerializer or CheckLearnAimSerializer
         """
         if self.request.method == 'GET':
             return ActionCompetenceSerializer
@@ -32,7 +33,8 @@ class LearnAim(viewsets.ModelViewSet):
         Get all learn aims.
         - only if the user is a student
         - only to the education ordinance of the user
-        return: Response with all learn aims
+        :param self: View object with the data for the learn aims
+        :return: Response with all learn aims
         """
         if self.request.method == 'GET':
             return_value = ActionCompetence.objects.filter(
@@ -47,7 +49,10 @@ class LearnAim(viewsets.ModelViewSet):
         - only if the learn aim is part of the user's education ordinance
         - only if the learn aim is not already checked
         - only if the semester is not lower than the previous semester
-        return: Response with the new learn check
+        :param self: View object with the data for the new learn check
+        :param request: Request with the data for the new learn check
+        :raises LearnAimNotInEducationOrdinance: if the learn aim is not part of the user's education ordinance
+        :return: Response with the new learn check
         """
         serializer = CheckLearnAimSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -66,7 +71,11 @@ class LearnAim(viewsets.ModelViewSet):
         Update a learning check.
         - only the assigned trainee can update the learn check
         - only if the learn check is not approved
-        return: Response with the updated learn check
+        :param self: View object with the data for the updated learn check
+        :param request: Request with the data for the updated learn check
+        :raises LearnCheckAlreadyApproved: if the learn check is already approved
+        :raises LearnCheckNotYourOwn: if the learn check is not your own
+        :return: Response with the updated learn check
         """
         learn_aim_check = get_object_or_404(CheckLearnAim, pk=kwargs['pk'])
 
@@ -87,7 +96,11 @@ class LearnAim(viewsets.ModelViewSet):
         Delete a learning check.
         - only the assigned trainee can delete the learn check
         - only if the learn check is not approved
-        return: Response with the success message
+        :param self: View object with the data for the destroyed learn check
+        :param request: Request with the data for the updated learn check
+        :raises LearnCheckAlreadyApproved: if the learn check is already approved
+        :raises LearnCheckNotYourOwn: if the learn check is not your own
+        :return: Response with the success message
         """
         learn_aim_check = get_object_or_404(CheckLearnAim, pk=kwargs['pk'])
 
@@ -99,7 +112,7 @@ class LearnAim(viewsets.ModelViewSet):
         return Response({"Success": "Learn check successfully deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class LearnCheckChart(APIView):
+class LearnCheckChartAPIView(APIView):
     """
     View for the diagram of the learn check.
     """
@@ -109,7 +122,11 @@ class LearnCheckChart(APIView):
         """
         Get the diagram for the learn check.
         - only if the learn aim is part of the user's education ordinance
-        return: Response for the chart
+        :param self: View object with the data for the diagram
+        :param request: Request with the data for the diagram (User)
+        :param pk: Primary key of the learn aim
+        :raises LearnAimNotInEducationOrdinance: if the learn aim is not part of the user's education ordinance
+        :return: Response for the chart
         """
         action_competence = get_object_or_404(ActionCompetence, id=pk)
         if request.user.education_ordinance not in action_competence.education_ordinance.all():

@@ -57,6 +57,9 @@ class LearnAimSerializer(serializers.ModelSerializer):
         Returns all completed learn aims for the current learn aim.
         A completed learn aim is a learn aim that has been closed by a trainee.
         Can be empty because no learn aim has been closed yet.
+        :param self: LearnAim object from the database
+        :param instance: LearnAim object from the database
+        :return: List of all completed learn aims for the current learn aim
         """
         completed_learn_aim = CheckLearnAim.objects.filter(closed_learn_check=instance,
                                                            assigned_trainee=self.context['request'].user).order_by(
@@ -80,8 +83,9 @@ class ActionCompetenceSerializer(serializers.ModelSerializer):
 
     def get_learn_aim(self, instance):
         """
-        instance: ActionCompetence object from the database
-        return: List of all learn aims for the current action competence
+        :param self: ActionCompetence object from the database
+        :param instance: ActionCompetence object from the database
+        :return: List of all learn aims for the current action competence
         """
         learn_aims = LearnAim.objects.filter(action_competence=instance).order_by('identification')
         return LearnAimSerializer(learn_aims, many=True, context=self.context).data
@@ -103,15 +107,17 @@ class DiagramSerializer(serializers.Serializer):
 
     def get_total(self, instance) -> int:
         """
-        instance: ActionCompetence object from the database
-        return: Total amount of learn aims for the current action competence
+        :param self: ActionCompetence object from the database
+        :param instance: ActionCompetence object from the database
+        :return: Total amount of learn aims for the current action competence
         """
         return LearnAim.objects.filter(action_competence=instance).count()
 
     def get_closed(self, instance) -> int:
         """
-        instance: ActionCompetence object from the database
-        return: Total amount of approved learn aims for the current action competence
+        :param self: ActionCompetence object from the database
+        :param instance: ActionCompetence object from the database
+        :return: Total amount of approved learn aims for the current action competence
         """
         return CheckLearnAim.objects.filter(closed_learn_check__action_competence=instance,
                                             assigned_trainee=self.context['request'].user, close_stage=3,
