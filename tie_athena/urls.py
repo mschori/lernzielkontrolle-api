@@ -6,7 +6,7 @@ from learn_aim_check import views
 from learn_aim_check.views import LearnCheckChartAPIView
 
 router = routers.DefaultRouter(trailing_slash=False)
-router.register(r'learn-check', views.LearnAimViewSet, basename='tag')
+router.register(r'learn-check', views.LearnAimViewSet, basename='learn-check')
 
 # Rest API Routers
 urlpatterns = [
