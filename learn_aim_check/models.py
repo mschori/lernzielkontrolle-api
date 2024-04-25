@@ -27,7 +27,7 @@ class ActionCompetence(models.Model):
     i.e. A1, A2, A3 etc.
     """
     identification = models.CharField(max_length=5, null=False, blank=False)
-    title = models.CharField(max_length=50, null=False, blank=False)
+    title = models.TextField(blank=False, null=False)
     education_ordinance = models.ManyToManyField(EducationOrdinance)
     description = models.TextField(null=False, blank=False)
     associated_modules_vocational_school = models.TextField(max_length=254, null=True, blank=True)
