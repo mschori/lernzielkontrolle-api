@@ -11,8 +11,7 @@ from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAi
     LearnAimSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
-
-
+from django.db.models import Max
 class LearnAimViewSet(viewsets.ModelViewSet):
     """
     View for the learn check.
@@ -151,7 +150,16 @@ class ToggleTodoAPIView(APIView):
         :return: Response with the updated learn aim
         """
         learn_aim = get_object_or_404(LearnAim, pk=pk)
+        current_stage = CheckLearnAim.objects.filter(
+            assigned_trainee=request.user,
+            closed_learn_check=learn_aim,
+            is_approved=True
+        ).aggregate(Max('close_stage'))['close_stage__max'] or 0
+
+        if current_stage >= 3:
+            return Response({"error": "This learn aim is fully completed and cannot be modified."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         learn_aim.marked_as_todo = not learn_aim.marked_as_todo
         learn_aim.save()
-        serializer = LearnAimSerializer(learn_aim, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(LearnAimSerializer(learn_aim, context={'request': request}).data, status=status.HTTP_200_OK)
