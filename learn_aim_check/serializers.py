@@ -47,6 +47,7 @@ class LearnAimSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     name = serializers.CharField(source='__str__', read_only=True)
     checked = serializers.SerializerMethodField()
+    marked_as_todo = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = LearnAim
@@ -122,3 +123,14 @@ class DiagramSerializer(serializers.Serializer):
         return CheckLearnAim.objects.filter(closed_learn_check__action_competence=instance,
                                             assigned_trainee=self.context['request'].user, close_stage=3,
                                             is_approved=True).count()
+
+
+class ToggleTodoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearnAim
+        fields = ['marked_as_todo']
+
+    def update(self, instance, validated_data):
+        instance.marked_as_todo = validated_data.get('marked_as_todo', instance.marked_as_todo)
+        instance.save()
+        return instance

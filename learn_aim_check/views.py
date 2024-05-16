@@ -6,12 +6,12 @@ from rest_framework.views import APIView
 
 from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, LearnCheckAlreadyApproved, \
     LearnCheckNotYourOwn
-from learn_aim_check.models import ActionCompetence, CheckLearnAim
-from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer
+from learn_aim_check.models import ActionCompetence, CheckLearnAim, LearnAim
+from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer, \
+    LearnAimSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
-
-
+from django.db.models import Max
 class LearnAimViewSet(viewsets.ModelViewSet):
     """
     View for the learn check.
@@ -134,3 +134,32 @@ class LearnCheckChartAPIView(APIView):
 
         serializer = DiagramSerializer(action_competence, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ToggleTodoAPIView(APIView):
+    """
+    API view to toggle the marked_as_todo field.
+    """
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def patch(self, request, pk):
+        """
+        Toggle the marked_as_todo state of a learn aim.
+        :param request: Request object
+        :param pk: Primary key of the learn aim
+        :return: Response with the updated learn aim
+        """
+        learn_aim = get_object_or_404(LearnAim, pk=pk)
+        current_stage = CheckLearnAim.objects.filter(
+            assigned_trainee=request.user,
+            closed_learn_check=learn_aim,
+            is_approved=True
+        ).aggregate(Max('close_stage'))['close_stage__max'] or 0
+
+        if current_stage >= 3:
+            return Response({"error": "This learn aim is fully completed and cannot be modified."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        learn_aim.marked_as_todo = not learn_aim.marked_as_todo
+        learn_aim.save()
+        return Response(LearnAimSerializer(learn_aim, context={'request': request}).data, status=status.HTTP_200_OK)
