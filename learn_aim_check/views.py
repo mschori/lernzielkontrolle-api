@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 
 from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdinance, LearnCheckAlreadyApproved, \
     LearnCheckNotYourOwn
-from learn_aim_check.models import ActionCompetence, CheckLearnAim
-from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer
+from learn_aim_check.models import ActionCompetence, CheckLearnAim, LearnAim
+from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer, \
+    LearnAimSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
 
@@ -133,4 +134,24 @@ class LearnCheckChartAPIView(APIView):
             raise LearnAimNotInEducationOrdinance
 
         serializer = DiagramSerializer(action_competence, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ToggleTodoAPIView(APIView):
+    """
+    API view to toggle the marked_as_todo field.
+    """
+    permission_classes = [IsAuthenticated, IsStudent]
+
+    def patch(self, request, pk):
+        """
+        Toggle the marked_as_todo state of a learn aim.
+        :param request: Request object
+        :param pk: Primary key of the learn aim
+        :return: Response with the updated learn aim
+        """
+        learn_aim = get_object_or_404(LearnAim, pk=pk)
+        learn_aim.marked_as_todo = not learn_aim.marked_as_todo
+        learn_aim.save()
+        serializer = LearnAimSerializer(learn_aim, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
