@@ -1,3 +1,4 @@
+from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -11,12 +12,13 @@ from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAi
     LearnAimSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
-from django.db.models import Max
+
+
 class LearnAimViewSet(viewsets.ModelViewSet):
     """
     View for the learn check.
     """
-    permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         """
@@ -116,7 +118,7 @@ class LearnCheckChartAPIView(APIView):
     """
     View for the diagram of the learn check.
     """
-    permission_classes = [IsAuthenticated, IsStudent]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, pk) -> Response:
         """

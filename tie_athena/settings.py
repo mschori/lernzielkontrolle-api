@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
-import django_heroku
+#import django_heroku
 import environ
 
 # Project-Version
@@ -131,7 +131,7 @@ if env('ENABLE_HTTPS_REDIRECT') == '1' or env('ENABLE_HTTPS_REDIRECT') == 'True'
 AUTH_USER_MODEL = 'users.User'
 
 # Heroku Settings
-django_heroku.settings(locals())
+#django_heroku.settings(locals())
 
 # Django Rest-Framework Configuration
 REST_FRAMEWORK = {
