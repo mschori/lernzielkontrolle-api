@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from learn_aim_check.models import ActionCompetence, CheckLearnAim, LearnAim, Tag
+from services.group_service import is_user_coach
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -48,7 +49,7 @@ class LearnAimSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     name = serializers.CharField(source='__str__', read_only=True)
     checked = serializers.SerializerMethodField()
-    marked_as_todo = serializers.BooleanField(read_only=True)
+    marked_as_todo = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = LearnAim
@@ -63,11 +64,24 @@ class LearnAimSerializer(serializers.ModelSerializer):
         :param instance: LearnAim object from the database
         :return: List of all completed learn aims for the current learn aim
         """
+        assigned_trainee = self.context['request'].user
+        if is_user_coach(self.context['request'].user) and 'student_id' in self.context and User.objects.filter(
+                id=self.context['student_id']).exists():
+            assigned_trainee = User.objects.get(id=self.context['student_id'])
         completed_learn_aim = CheckLearnAim.objects.filter(closed_learn_check=instance,
-                                                           assigned_trainee=self.context['request'].user).order_by(
+                                                           assigned_trainee=assigned_trainee).order_by(
             'close_stage')
 
         return CheckLearnAimSerializer(completed_learn_aim, many=True, context=self.context).data
+
+    def get_marked_as_todo(self, instance):
+        """
+        :param instance: LearnAim object from the database
+        :return: True if the learn aim is marked as todo
+        """
+        if 'student_id' in self.context:
+            return instance.marked_as_todo.filter(id=self.context['student_id']).exists()
+        return False
 
 
 class ActionCompetenceSerializer(serializers.ModelSerializer):

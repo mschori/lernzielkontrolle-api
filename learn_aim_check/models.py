@@ -58,7 +58,7 @@ class LearnAim(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     tags = models.ManyToManyField(Tag)
-    marked_as_todo = models.BooleanField(null=False, blank=False, default=False)
+    marked_as_todo = models.ManyToManyField(User, related_name='marked_as_todo', blank=True)
 
     def __str__(self) -> str:
         """

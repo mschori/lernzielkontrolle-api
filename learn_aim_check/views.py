@@ -12,6 +12,8 @@ from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAi
     LearnAimSerializer
 from services.learn_check_validator import learn_check_validator
 from users.permissions import IsStudent
+from services.group_service import is_user_coach
+from users.models import User
 
 
 class LearnAimViewSet(viewsets.ModelViewSet):
@@ -30,6 +32,16 @@ class LearnAimViewSet(viewsets.ModelViewSet):
             return ActionCompetenceSerializer
         return CheckLearnAimSerializer
 
+    def get_serializer_context(self):
+        """
+        Get the context for the serializer.
+        :param self: View object
+        :return: Context for the serializer
+        """
+        context = super().get_serializer_context()
+        context['student_id'] = self.request.query_params.get('student-id', None)
+        return context
+
     def get_queryset(self) -> CheckLearnAim or ActionCompetence:
         """
         Get all learn aims.
@@ -38,9 +50,20 @@ class LearnAimViewSet(viewsets.ModelViewSet):
         :param self: View object with the data for the learn aims
         :return: Response with all learn aims
         """
+        return_value = None
         if self.request.method == 'GET':
-            return_value = ActionCompetence.objects.filter(
-                education_ordinance=self.request.user.education_ordinance).order_by('identification')
+            selected_student_id = self.request.query_params.get('student-id', None)
+            print(selected_student_id)
+            if is_user_coach(self.request.user) and selected_student_id.isnumeric():
+                selected_student = User.objects.filter(id=selected_student_id).first()
+                print(selected_student)
+                if selected_student:
+                    return_value = ActionCompetence.objects.filter(
+                        education_ordinance=selected_student.education_ordinance).order_by('identification')
+                    print(return_value)
+            else:
+                return_value = ActionCompetence.objects.filter(
+                    education_ordinance=self.request.user.education_ordinance).order_by('identification')
         else:
             return_value = CheckLearnAim.objects.filter(assigned_trainee=self.request.user)
         return return_value
@@ -159,9 +182,12 @@ class ToggleTodoAPIView(APIView):
         ).aggregate(Max('close_stage'))['close_stage__max'] or 0
 
         if current_stage >= 3:
+            learn_aim.marked_as_todo.remove(request.user)
             return Response({"error": "This learn aim is fully completed and cannot be modified."},
                             status=status.HTTP_403_FORBIDDEN)
 
-        learn_aim.marked_as_todo = not learn_aim.marked_as_todo
-        learn_aim.save()
+        if request.user in learn_aim.marked_as_todo.all():
+            learn_aim.marked_as_todo.remove(request.user)
+        else:
+            learn_aim.marked_as_todo.add(request.user)
         return Response(LearnAimSerializer(learn_aim, context={'request': request}).data, status=status.HTTP_200_OK)
