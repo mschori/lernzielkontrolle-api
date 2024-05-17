@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from learn_aim_check.models import ActionCompetence, CheckLearnAim, LearnAim, Tag
+from users.models import User
 from users.serializers import UserSerializer
 
 
@@ -134,3 +135,18 @@ class ToggleTodoSerializer(serializers.ModelSerializer):
         instance.marked_as_todo = validated_data.get('marked_as_todo', instance.marked_as_todo)
         instance.save()
         return instance
+
+
+class UserLearnDataSerializer(serializers.ModelSerializer):
+    learn_aims = serializers.SerializerMethodField()
+    tags = TagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'firstname', 'lastname', 'learn_aims', 'tags']
+
+    def get_learn_aims(self, obj):
+        learn_aims = LearnAim.objects.filter(
+            checklearnaim__assigned_trainee=obj
+        ).distinct()
+        return LearnAimSerializer(learn_aims, many=True, context={'request': self.context['request']}).data
