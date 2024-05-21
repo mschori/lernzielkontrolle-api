@@ -66,7 +66,7 @@ class LearnAimSerializer(serializers.ModelSerializer):
         """
         if 'student_id' in self.context:
             return instance.marked_as_todo.filter(id=self.context['student_id']).exists()
-        return False
+        return instance.marked_as_todo.filter(id=self.context['request'].user.id).exists()
 
 
 class SimpleLearnAimSerializer(serializers.ModelSerializer):
