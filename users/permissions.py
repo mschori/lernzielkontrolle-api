@@ -16,13 +16,23 @@ class IsStudent(permissions.BasePermission):
 class IsCoach(permissions.BasePermission):
     """
     Ensure user is in group 'trainer'.
+
+    This permission class checks if the user is a coach by verifying if the user
+    is in the 'trainer' group.
+
+    :param request: The HTTP request object.
+    :param view: The view for which the permission is being checked.
+    :returns: Boolean indicating if the user has permission to perform the action.
+    :raises: PermissionDenied if the user is not a trainer.
     """
     message = 'Only trainers have the permission to do this action.'
 
     def has_permission(self, request, view):
-        return is_user_coach(request.user)
+        """
+        Check if the user is a coach.
 
-    # class IsCoach(permissions.BasePermission):
-    ##   def has_permission(self, request, view):
-    #     # Implement your logic to determine if the user is a coach
-    #    return request.user.is_authenticated and request.user.is_coach
+        :param request: The HTTP request object.
+        :param view: The view for which the permission is being checked.
+        :returns: Boolean indicating if the user has permission to perform the action.
+        """
+        return is_user_coach(request.user)

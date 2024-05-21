@@ -19,10 +19,16 @@ class TagSerializer(serializers.ModelSerializer):
 
 class LearnAimSerializer(serializers.ModelSerializer):
     """
-    Serializes the LearnAim model. Returns all fields such as action_competence, identification, description,
-    taxonomy_level, example_text, created_at, updated_at, tags
-    """
+    Serializes the LearnAim model.
 
+    Returns fields such as action_competence, identification, description,
+    taxonomy_level, example_text, tags, etc.
+
+    :param tags: Tags associated with the learn aim.
+    :param name: Read-only field for the name of the learn aim.
+    :param checked: List of completed learn aims for the current learn aim.
+    :param marked_as_todo: Boolean indicating if the learn aim is marked as a to-do item.
+    """
     tags = TagSerializer(many=True)
     name = serializers.CharField(source='__str__', read_only=True)
     checked = serializers.SerializerMethodField()
@@ -53,8 +59,10 @@ class LearnAimSerializer(serializers.ModelSerializer):
 
     def get_marked_as_todo(self, instance):
         """
-        :param instance: LearnAim object from the database
-        :return: True if the learn aim is marked as todo
+        Check if the learn aim is marked as to-do for the given student.
+
+        :param instance: LearnAim object from the database.
+        :return: True if the learn aim is marked as to-do, otherwise False.
         """
         if 'student_id' in self.context:
             return instance.marked_as_todo.filter(id=self.context['student_id']).exists()
@@ -64,8 +72,12 @@ class LearnAimSerializer(serializers.ModelSerializer):
 class SimpleLearnAimSerializer(serializers.ModelSerializer):
     """
     Simplified version of the LearnAimSerializer to avoid recursion.
-    """
 
+    Returns fields such as name and tags.
+
+    :param tags: Tags associated with the learn aim.
+    :param name: Read-only field for the name of the learn aim.
+    """
     tags = TagSerializer(many=True)
     name = serializers.CharField(source='__str__', read_only=True)
 
@@ -77,9 +89,17 @@ class SimpleLearnAimSerializer(serializers.ModelSerializer):
 class CheckLearnAimSerializer(serializers.ModelSerializer):
     """
     Serializes the CheckLearnAim model.
-    Returns all fields such as assigned_trainee, closed_learn_check, comment
-    """
 
+    Returns fields such as assigned_trainee, closed_learn_check, comment, approved_by, etc.
+
+    :param approved_by: User who approved the learn aim.
+    :param is_approved: Boolean indicating if the learn aim is approved.
+    :param comment: Comment about the learn aim check.
+    :param semester: Semester in which the learn aim was checked.
+    :param close_stage: Stage at which the learn aim was closed.
+    :param closed_learn_check_id: Primary key related field for the closed learn check.
+    :param learn_aim: Serialized data of the learn aim.
+    """
     approved_by = UserSerializer(read_only=True)
     is_approved = serializers.BooleanField(read_only=True)
     comment = serializers.CharField(max_length=254, required=True)
@@ -169,6 +189,13 @@ class ToggleTodoSerializer(serializers.ModelSerializer):
         fields = ['marked_as_todo']
 
     def update(self, instance, validated_data):
+        """
+        Update the marked_as_todo field of the LearnAim instance.
+
+        :param instance: The LearnAim instance to be updated.
+        :param validated_data: The validated data containing the new value for marked_as_todo.
+        :return: The updated LearnAim instance.
+        """
         instance.marked_as_todo = validated_data.get('marked_as_todo', instance.marked_as_todo)
         instance.save()
         return instance
@@ -189,6 +216,12 @@ class UserLearnDataSerializer(serializers.ModelSerializer):
         fields = ['email', 'firstname', 'lastname', 'learn_aims', 'tags']
 
     def get_learn_aims(self, obj):
+        """
+        Get the learn aims for the user.
+
+        :param obj: The User instance for which to retrieve learn aims.
+        :return: A list of serialized learn aims.
+        """
         learn_aims = LearnAim.objects.filter(
             checklearnaim__assigned_trainee=obj
         ).distinct()
