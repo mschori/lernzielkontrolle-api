@@ -38,78 +38,69 @@ class CheckUserGroupView(APIView):
                         status=status.HTTP_200_OK)
 
 
-# class TraineeListView(APIView):
-#     """
-#     API-View to list all users in the 'STUDENT' group.
-#     """
-#     permission_classes = [IsAuthenticated]
-#
-#     def get(self, request, *args, **kwargs):
-#         trainees = User.objects.filter(groups__name='STUDENT')
-#         serializer = UserSerializer(trainees, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 class AllTraineesView(ModelViewSet):
     """
-    ModelViewSet to provide all User Data needed
+    ModelViewSet to provide all User Data needed for trainees.
+
+    :returns: Queryset of users in the student group
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_queryset(self):
+        """
+        Get the queryset of users in the student group.
+
+        :returns: Queryset of users in the student group
+        """
         student_group_name = get_group_name_student()
         return User.objects.filter(groups__name=student_group_name)
 
 
 class SingleTraineeView(RetrieveAPIView):
     """
-    RetrieveAPIView to provide data for a single user who is a student
+    RetrieveAPIView to provide data for a single user who is a student.
+
+    :returns: Serialized data for the specified user
     """
     serializer_class = UserSerializer
 
     def get_queryset(self):
+        """
+        Get the queryset of users in the student group.
+
+        :returns: Queryset of users in the student group
+        """
         student_group_name = get_group_name_student()
         return User.objects.filter(groups__name=student_group_name)
 
 
 class TraineeLearnDataView(APIView):
+    """
+    API-View to provide learn data for a specific trainee.
+
+    :param trainee_id: int - ID of the trainee
+    :returns: Response containing user data and checked learn aims
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, trainee_id, *args, **kwargs):
-        # Fetches data for the user specified by trainee_id; removed fallback to request.user
+        """
+        Handle GET request to fetch learn data for a specific trainee.
+
+        :param request: The HTTP request object.
+        :param trainee_id: The ID of the trainee whose learn data is being retrieved.
+        :returns: Response containing serialized user data and checked learn aims.
+        """
         user = get_object_or_404(User, pk=trainee_id)
         serializer = UserLearnDataSerializer(user, context={'request': request})
 
-        # Fetch checked learn aims
         checked_learn_aims = CheckLearnAim.objects.filter(assigned_trainee=user)
-        checked_learn_aims_serializer = CheckLearnAimSerializer(checked_learn_aims, many=True, context={'request': request})
+        checked_learn_aims_serializer = CheckLearnAimSerializer(checked_learn_aims, many=True,
+                                                                context={'request': request})
 
         data = {
             'user_data': serializer.data,
             'checked_learn_aims': checked_learn_aims_serializer.data
         }
         return Response(data)
-
-# class TraineeDetailView(APIView):
-#     """
-#     API-View to retrieve the details of a specific trainee and their action competences.
-#     Only accessible by coaches.
-#     """
-#     permission_classes = [IsAuthenticated]
-#
-#     def get(self, request, trainee_id, *args, **kwargs):
-#         trainee = User.objects.filter(groups__name='STUDENT').filter(pk=trainee_id).first()
-#         if not trainee:
-#             return Response({'detail': 'Trainee not found or not a student.'}, status=status.HTTP_404_NOT_FOUND)
-#
-#         # Assuming ActionCompetence is related to trainee through some field
-#         action_competences = ActionCompetence.objects.filter(education_ordinance=trainee.education_ordinance).distinct()
-#
-#         trainee_serializer = UserSerializer(trainee)
-#         action_competences_serializer = ActionCompetenceSerializer(action_competences, many=True)
-#
-#         return Response({
-#             'trainee': trainee_serializer.data,
-#             'action_competences': action_competences_serializer.data
-#         }, status=status.HTTP_200_OK)

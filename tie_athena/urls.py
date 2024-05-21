@@ -19,13 +19,8 @@ urlpatterns = [
     path('api/v1/learn-check/chart/<int:pk>/', LearnCheckChartAPIView.as_view(), name='learn_check_chart'),
     path('api/v1/learn-aim/<int:pk>/toggle-todo/', ToggleTodoAPIView.as_view(),
          name='learn_aim_toggle_todo'),
-    # path('api/v1/users/trainee-detail/<int:trainee_id>/', TraineeDetailView.as_view(), name='trainee_detail'),
-    # path('closed-learn-checks/', CheckLearnAimViewSet.as_view({'get': 'list'}), name='closed-learn-checks-list'),
-
-
     path('api/v1/checked-learn-aims/<int:trainee_id>/', CheckedLearnAimsForTraineeView.as_view(),
          name='checked-learn-aims-for-trainee'),
     path('api/v1/checked-learn-aims/trainee/<int:trainee_id>/', CheckedLearnAimsForTraineeView.as_view(),
          name='checked-learn-aims-for-trainee'),
-
 ]

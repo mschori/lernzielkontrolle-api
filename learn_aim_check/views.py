@@ -177,12 +177,10 @@ class ToggleTodoAPIView(APIView):
         If the learn aim has been fully completed (i.e., the maximum close stage is 3 or higher),
         it cannot be modified and an error is returned.
 
-        Args:
-            request (Request): The HTTP request object.
-            pk (int): The primary key of the learn aim.
-
-        Returns:
-            Response: A response object containing the updated learn aim or an error message.
+        :param request: The HTTP request object.
+        :param pk: The primary key of the learn aim.
+        :returns: A response object containing the updated learn aim or an error message.
+        :raises: HTTP 403 if the learn aim is fully completed and cannot be modified.
         """
         learn_aim = get_object_or_404(LearnAim, pk=pk)
         current_stage = CheckLearnAim.objects.filter(
@@ -217,6 +215,8 @@ class CheckLearnAimViewSet(viewsets.ModelViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         Approve and decline actions are restricted to coaches.
+
+        :returns: A list of permission classes.
         """
         if self.action in ['approve_check', 'decline_check']:
             self.permission_classes = [IsAuthenticated, IsCoach]
@@ -227,14 +227,15 @@ class CheckLearnAimViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='approve')
     def approve_check(self, request, pk=None):
         """
-        Custom action to approve a learn aim check
+        Custom action to approve a learn aim check.
+
         This action marks a learn aim check as approved if it is not already approved.
-        Returns an error if the learn aim check is already approved
-        Args:
-            request: The HTTP request object.
-            pk: The primary key of the learn aim check to approve
-        Returns:
-            Response: A response object containing the serialized learn aim check data or an error message.
+        Returns an error if the learn aim check is already approved.
+
+        :param request: The HTTP request object.
+        :param pk: The primary key of the learn aim check to approve.
+        :returns: A response object containing the serialized learn aim check data or an error message.
+        :raises HTTP 400: If the learn aim check is already approved.
         """
         learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
         if learn_aim_check.is_approved:
@@ -248,14 +249,15 @@ class CheckLearnAimViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['delete'], url_path='decline')
     def decline_check(self, request, pk=None):
         """
-        Custom action to decline (delete) a learn aim check
+        Custom action to decline (delete) a learn aim check.
+
         This action deletes a learn aim check if it is not approved.
-        Returns an error if the learn aim check is already approved
-        Args:
-            request: The HTTP request object.
-            pk: The primary key of the learn aim check to decline
-        Returns:
-            Response: A response object indicating the deletion status or an error message.
+        Returns an error if the learn aim check is already approved.
+
+        :param request: The HTTP request object.
+        :param pk: The primary key of the learn aim check to decline.
+        :returns: A response object indicating the deletion status or an error message.
+        :raises HTTP 400: If the learn aim check is already approved.
         """
         learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
         if learn_aim_check.is_approved:
@@ -274,11 +276,11 @@ class CheckedLearnAimsForTraineeView(APIView):
     def get(self, request, trainee_id, *args, **kwargs):
         """
         Handle GET requests to fetch checked learning aims for a specific trainee.
-        Args:
-            request: The HTTP request object.
-            trainee_id: The ID of the trainee whose checked learning aims are being retrieved.
-        Returns:
-            Response: A response object containing serialized checked learning aims.
+
+        :param request: The HTTP request object.
+        :param trainee_id: The ID of the trainee whose checked learning aims are being retrieved.
+        :returns: A response object containing serialized checked learning aims.
+        :raises: HTTP 404 if the user is not found.
         """
         user = get_object_or_404(User, pk=trainee_id)
         checked_learn_aims = CheckLearnAim.objects.filter(assigned_trainee=user)
