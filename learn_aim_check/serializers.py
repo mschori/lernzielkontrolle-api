@@ -155,6 +155,15 @@ class DiagramSerializer(serializers.Serializer):
 
 
 class ToggleTodoSerializer(serializers.ModelSerializer):
+    """
+    Serializer for toggling the marked_as_todo field of a LearnAim instance.
+
+    This serializer handles updating the marked_as_todo field of a LearnAim instance,
+    allowing it to be marked or unmarked as a to-do item.
+
+    :param marked_as_todo: Boolean indicating if the learn aim is marked as a to-do item.
+    """
+
     class Meta:
         model = LearnAim
         fields = ['marked_as_todo']
@@ -166,6 +175,12 @@ class ToggleTodoSerializer(serializers.ModelSerializer):
 
 
 class UserLearnDataSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model, including related learn aims and tags.
+
+    :param learn_aims: A list of learn aims associated with the user.
+    :param tags: A list of tags associated with the user, serialized using the TagSerializer.
+    """
     learn_aims = serializers.SerializerMethodField()
     tags = TagSerializer(many=True, read_only=True)
 
