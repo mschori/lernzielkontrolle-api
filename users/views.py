@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from learn_aim_check.serializers import UserLearnDataSerializer
+from learn_aim_check.models import CheckLearnAim
+from learn_aim_check.serializers import UserLearnDataSerializer, CheckLearnAimSerializer
 from services.group_service import get_group_name_student
 from users.models import User
 from users.serializers import UserSerializer
@@ -79,7 +80,16 @@ class TraineeLearnDataView(APIView):
         # Fetches data for the user specified by trainee_id; removed fallback to request.user
         user = get_object_or_404(User, pk=trainee_id)
         serializer = UserLearnDataSerializer(user, context={'request': request})
-        return Response(serializer.data)
+
+        # Fetch checked learn aims
+        checked_learn_aims = CheckLearnAim.objects.filter(assigned_trainee=user)
+        checked_learn_aims_serializer = CheckLearnAimSerializer(checked_learn_aims, many=True, context={'request': request})
+
+        data = {
+            'user_data': serializer.data,
+            'checked_learn_aims': checked_learn_aims_serializer.data
+        }
+        return Response(data)
 
 # class TraineeDetailView(APIView):
 #     """

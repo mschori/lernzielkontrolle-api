@@ -1,6 +1,7 @@
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,10 +11,10 @@ from custom_exceptions.learn_check_exceptions import LearnAimNotInEducationOrdin
 from learn_aim_check.models import ActionCompetence, CheckLearnAim, LearnAim
 from learn_aim_check.serializers import ActionCompetenceSerializer, CheckLearnAimSerializer, DiagramSerializer, \
     LearnAimSerializer
-from services.learn_check_validator import learn_check_validator
-from users.permissions import IsStudent
 from services.group_service import is_user_coach
+from services.learn_check_validator import learn_check_validator
 from users.models import User
+from users.permissions import IsStudent, IsCoach
 
 
 class LearnAimViewSet(viewsets.ModelViewSet):
@@ -54,7 +55,8 @@ class LearnAimViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             selected_student_id = self.request.query_params.get('student-id', None)
             print(selected_student_id)
-            if is_user_coach(self.request.user) and selected_student_id.isnumeric():
+            if is_user_coach(self.request.user):
+                # and selected_student_id.isnumeric():
                 selected_student = User.objects.filter(id=selected_student_id).first()
                 print(selected_student)
                 if selected_student:
@@ -163,16 +165,24 @@ class LearnCheckChartAPIView(APIView):
 
 class ToggleTodoAPIView(APIView):
     """
-    API view to toggle the marked_as_todo field.
+    API view to toggle the marked_as_todo field for a learn aim.
     """
     permission_classes = [IsAuthenticated, IsStudent]
 
     def patch(self, request, pk):
         """
         Toggle the marked_as_todo state of a learn aim.
-        :param request: Request object
-        :param pk: Primary key of the learn aim
-        :return: Response with the updated learn aim
+
+        This method allows a student to mark or unmark a learn aim as a to-do item.
+        If the learn aim has been fully completed (i.e., the maximum close stage is 3 or higher),
+        it cannot be modified and an error is returned.
+
+        Args:
+            request (Request): The HTTP request object.
+            pk (int): The primary key of the learn aim.
+
+        Returns:
+            Response: A response object containing the updated learn aim or an error message.
         """
         learn_aim = get_object_or_404(LearnAim, pk=pk)
         current_stage = CheckLearnAim.objects.filter(
@@ -191,3 +201,86 @@ class ToggleTodoAPIView(APIView):
         else:
             learn_aim.marked_as_todo.add(request.user)
         return Response(LearnAimSerializer(learn_aim, context={'request': request}).data, status=status.HTTP_200_OK)
+
+
+class CheckLearnAimViewSet(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing CheckLearnAim instances.
+    This viewset provides `list`, `create`, `retrieve`, `update`, and `destroy` actions.
+    Additionally, it provides custom actions for approving and declining learn aim checks.
+    """
+    serializer_class = CheckLearnAimSerializer
+    queryset = CheckLearnAim.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        Approve and decline actions are restricted to coaches.
+        """
+        if self.action in ['approve_check', 'decline_check']:
+            self.permission_classes = [IsAuthenticated, IsCoach]
+        else:
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+    @action(detail=True, methods=['patch'], url_path='approve')
+    def approve_check(self, request, pk=None):
+        """
+        Custom action to approve a learn aim check
+        This action marks a learn aim check as approved if it is not already approved.
+        Returns an error if the learn aim check is already approved
+        Args:
+            request: The HTTP request object.
+            pk: The primary key of the learn aim check to approve
+        Returns:
+            Response: A response object containing the serialized learn aim check data or an error message.
+        """
+        learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
+        if learn_aim_check.is_approved:
+            return Response({'detail': 'Learn check is already approved.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        learn_aim_check.is_approved = True
+        learn_aim_check.save()
+        serializer = self.get_serializer(learn_aim_check)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='decline')
+    def decline_check(self, request, pk=None):
+        """
+        Custom action to decline (delete) a learn aim check
+        This action deletes a learn aim check if it is not approved.
+        Returns an error if the learn aim check is already approved
+        Args:
+            request: The HTTP request object.
+            pk: The primary key of the learn aim check to decline
+        Returns:
+            Response: A response object indicating the deletion status or an error message.
+        """
+        learn_aim_check = get_object_or_404(CheckLearnAim, pk=pk)
+        if learn_aim_check.is_approved:
+            return Response({'detail': 'Approved learn checks cannot be deleted.'}, status=status.HTTP_400_BAD_REQUEST)
+        learn_aim_check.delete()
+        return Response({'detail': 'Learn check deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class CheckedLearnAimsForTraineeView(APIView):
+    """
+    API view to retrieve checked learning aims for a specific trainee.
+    Only authenticated users can access this view.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, trainee_id, *args, **kwargs):
+        """
+        Handle GET requests to fetch checked learning aims for a specific trainee.
+        Args:
+            request: The HTTP request object.
+            trainee_id: The ID of the trainee whose checked learning aims are being retrieved.
+        Returns:
+            Response: A response object containing serialized checked learning aims.
+        """
+        user = get_object_or_404(User, pk=trainee_id)
+        checked_learn_aims = CheckLearnAim.objects.filter(assigned_trainee=user)
+        serializer = CheckLearnAimSerializer(checked_learn_aims, many=True, context={'request': request})
+        return Response(serializer.data)

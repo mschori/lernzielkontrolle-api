@@ -17,29 +17,6 @@ class TagSerializer(serializers.ModelSerializer):
         exclude = ['created_at', 'updated_at']
 
 
-class CheckLearnAimSerializer(serializers.ModelSerializer):
-    """
-    Serializes the CheckLearnAim model.
-    Returns all fields such as assigned_trainee, closed_learn_check, comment
-    """
-
-    approved_by = UserSerializer(read_only=True)
-    is_approved = serializers.BooleanField(read_only=True)
-    comment = serializers.CharField(max_length=254, required=True)
-    semester = serializers.IntegerField(min_value=1, max_value=8, required=True)
-    close_stage = serializers.IntegerField(min_value=1, max_value=3, required=True)
-    closed_learn_check_id = serializers.PrimaryKeyRelatedField(queryset=LearnAim.objects.all(),
-                                                               source='closed_learn_check', write_only=True)
-
-    class Meta:
-        model = CheckLearnAim
-        fields = '__all__'
-        extra_kwargs = {
-            'assigned_trainee': {'required': False},
-            'closed_learn_check': {'required': False}
-        }
-
-
 class LearnAimSerializer(serializers.ModelSerializer):
     """
     Serializes the LearnAim model. Returns all fields such as action_competence, identification, description,
@@ -82,6 +59,43 @@ class LearnAimSerializer(serializers.ModelSerializer):
         if 'student_id' in self.context:
             return instance.marked_as_todo.filter(id=self.context['student_id']).exists()
         return False
+
+
+class SimpleLearnAimSerializer(serializers.ModelSerializer):
+    """
+    Simplified version of the LearnAimSerializer to avoid recursion.
+    """
+
+    tags = TagSerializer(many=True)
+    name = serializers.CharField(source='__str__', read_only=True)
+
+    class Meta:
+        model = LearnAim
+        exclude = ['created_at', 'updated_at', 'identification', 'action_competence']
+
+
+class CheckLearnAimSerializer(serializers.ModelSerializer):
+    """
+    Serializes the CheckLearnAim model.
+    Returns all fields such as assigned_trainee, closed_learn_check, comment
+    """
+
+    approved_by = UserSerializer(read_only=True)
+    is_approved = serializers.BooleanField(read_only=True)
+    comment = serializers.CharField(max_length=254, required=True)
+    semester = serializers.IntegerField(min_value=1, max_value=8, required=True)
+    close_stage = serializers.IntegerField(min_value=1, max_value=3, required=True)
+    closed_learn_check_id = serializers.PrimaryKeyRelatedField(queryset=LearnAim.objects.all(),
+                                                               source='closed_learn_check', write_only=True)
+    learn_aim = SimpleLearnAimSerializer(read_only=True, source='closed_learn_check')
+
+    class Meta:
+        model = CheckLearnAim
+        fields = '__all__'
+        extra_kwargs = {
+            'assigned_trainee': {'required': False},
+            'closed_learn_check': {'required': False}
+        }
 
 
 class ActionCompetenceSerializer(serializers.ModelSerializer):
